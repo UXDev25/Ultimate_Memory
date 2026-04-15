@@ -13,8 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import org.example.project.memory.viewModel.MemViewModel
 import org.jetbrains.compose.resources.painterResource
 import ultimate_memory.composeapp.generated.resources.Res
 import ultimate_memory.composeapp.generated.resources.momazosdiego
