@@ -1,0 +1,7 @@
+TEAM_ID=
+
+PRODUCT_NAME=Ultimate_Memory
+PRODUCT_BUNDLE_IDENTIFIER=org.example.project.memory.Ultimate_Memory$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
