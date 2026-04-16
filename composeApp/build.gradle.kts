@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -45,7 +47,16 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.storage.kt)
+            implementation(libs.ktor.client.android.vlatestversion)
+            // Ktor (Motor de xarxa per Android)
+            implementation("io.ktor:ktor-client-android:3.4.2")
         }
+        iosMain.dependencies {
+            // Motor de xarxa per a iOS necessari per Supabase
+            implementation("io.ktor:ktor-client-darwin:3.4.2")
+        }
+
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -60,6 +71,17 @@ kotlin {
             implementation(libs.kotlinx.serialization.core)
             //Logs
             implementation(libs.napier)
+            // Supabase per a Bases de Dades (PostgREST)
+            implementation(libs.postgrest.kt.v350)
+            // Serialització JSON de Kotlin
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+            //Async img
+            implementation("io.coil-kt.coil3:coil-compose:3.4.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.4.0")
+            //Icons
+            implementation(compose.components.uiToolingPreview)
+            implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

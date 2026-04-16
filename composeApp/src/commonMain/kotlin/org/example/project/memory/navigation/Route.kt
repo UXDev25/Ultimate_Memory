@@ -13,5 +13,5 @@ sealed class Route: NavKey {
     @Serializable
     data object SettingsRoute : Route()
     @Serializable
-    data class DeckDetailRoute(val deckId: Int) : Route()
+    data class DeckDetailRoute(val deckId: String) : Route()
 }
