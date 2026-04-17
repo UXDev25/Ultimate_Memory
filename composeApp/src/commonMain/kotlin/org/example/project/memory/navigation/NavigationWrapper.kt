@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import io.ktor.http.parameters
 import kotlinx.coroutines.NonCancellable.key
 import org.example.project.memory.screens.DeckDetailScr
 import org.example.project.memory.screens.DeckSelectorScr
@@ -29,7 +30,7 @@ fun NavigationWrapper(viewModel: MemViewModel){
             entry<Route.DeckSelectorRoute> {
                 DeckSelectorScr(
                     navigateBack = { backStack.removeLastOrNull() },
-                    navigateToDetail = { backStack.add(Route.DeckDetailRoute(deckId = "")) },
+                    navigateToDetail = { backStack.add(Route.DeckDetailRoute(deckId = it)) },
                     viewModel = viewModel
                 )
             }

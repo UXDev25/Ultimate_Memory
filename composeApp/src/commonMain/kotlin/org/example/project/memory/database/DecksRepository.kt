@@ -1,5 +1,6 @@
 package org.example.project.memory.database
 
+import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlin.collections.emptyList
@@ -8,16 +9,19 @@ class DecksRepository {
     private val decks = MemoSupabaseClient.client.from("decks")
     private val cards = MemoSupabaseClient.client.from("cards")
 
-    suspend fun GetAllDecks(): List<Deck> {
+    suspend fun getAllDecks(): List<Deck> {
+        Napier.d(tag = "MEMORY_LOG") { "entering repository" }
         return try {
-            decks.select().decodeList<Deck>()
+            val result = decks.select().decodeList<Deck>()
+            Napier.d(tag = "MEMORY_LOG") { "Hem descarregat ${result.size} baralles!" }
+            result
         } catch (e: Exception) {
-            println("Error getting decks: ${e.message}")
+            Napier.d(tag = "MEMORY_LOG") { "error getting decks: ${e.message}" }
             emptyList()
         }
     }
 
-    suspend fun GetAllCardsFromDeck(deckId: String): List<Card> {
+    suspend fun getAllCardsFromDeck(deckId: String): List<Card> {
         return try {
             cards.select {
                 filter {

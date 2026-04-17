@@ -18,7 +18,7 @@ fun SettingsScr(navigateBack: () -> Unit){
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Pantalla 2", style = MaterialTheme.typography.headlineMedium)
+        Text("Settings", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(24.dp))
         Button(onClick = navigateBack) { Text("Go Back") }
     }

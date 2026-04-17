@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.aakira.napier.Napier
 import org.example.project.memory.viewModel.MemViewModel
 
 @Composable
@@ -24,7 +25,13 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
         val decksDB by viewModel.decksDB.collectAsStateWithLifecycle()
         val actualDeck = decksDB.find { deck -> deck.id == deckId }
 
-        actualDeck?.name?.let { Text(it, style = MaterialTheme.typography.headlineMedium) }
+        Napier.d(tag = "MEMORY_LOG") { "deck ID: $deckId" }
+        Text("${actualDeck?.name}", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = {
+            viewModel.modifySelectedDeck(actualDeck)
+            navigateBack()
+        }) { Text("Select Deck") }
         Spacer(Modifier.height(24.dp))
         Button(onClick = navigateBack) { Text("Go back") }
     }

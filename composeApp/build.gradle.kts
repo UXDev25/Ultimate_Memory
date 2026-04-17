@@ -72,7 +72,8 @@ kotlin {
             //Logs
             implementation(libs.napier)
             // Supabase per a Bases de Dades (PostgREST)
-            implementation(libs.postgrest.kt.v350)
+            implementation("io.github.jan-tennert.supabase:storage-kt:3.0.2")
+            implementation("io.github.jan-tennert.supabase:postgrest-kt:3.0.2")
             // Serialització JSON de Kotlin
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
             //Async img

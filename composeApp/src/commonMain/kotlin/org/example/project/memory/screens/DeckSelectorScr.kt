@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import coil3.compose.AsyncImage
+import io.github.aakira.napier.Napier
 import org.example.project.memory.database.Deck
 
 
@@ -50,8 +52,8 @@ fun DeckSelectorScr(
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(Modifier.height(54.dp))
         Text("Select Deck", style = MaterialTheme.typography.headlineMedium)
-        Spacer(Modifier.height(24.dp))
         Button(onClick = navigateBack) { Text("Go Back") }
         Column(modifier = Modifier.fillMaxSize(1f),
             verticalArrangement = Arrangement.SpaceBetween) {
@@ -156,11 +158,12 @@ fun DeckList(viewModel: MemViewModel, navigateToDetail: (String) -> Unit){
 
 @Composable
 fun DeckItem(actualDeck: Deck, navigateToDetail: (String) -> Unit) {
+    Napier.d(tag = "MEMORY_LOG") { "Deck item func reached" }
     Card(border = BorderStroke(Dp.Hairline, color = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp, 5.dp)
-            .clickable{ navigateToDetail(actualDeck.name)},
+            .clickable{ navigateToDetail(actualDeck.id)},
         shape = MaterialTheme.shapes.small
     )    {
         Row(verticalAlignment = Alignment.CenterVertically) {
