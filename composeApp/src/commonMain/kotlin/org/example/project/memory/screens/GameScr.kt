@@ -1,6 +1,5 @@
 package org.example.project.memory.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,29 +17,29 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import org.example.project.memory.database.Card
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.example.project.memory.viewModel.MemViewModel
 import kotlin.collections.emptyList
-import kotlin.collections.mutableListOf
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScr(navigateBack: () -> Unit){
     val vm: MemViewModel = viewModel { MemViewModel() }
@@ -52,8 +51,11 @@ fun GameScr(navigateBack: () -> Unit){
             val cardsDB by vm.cardsDB.collectAsStateWithLifecycle()
             val cardsList = remember(cardsDB) {
                 if (cardsDB.isNotEmpty()) {
-                    val elementsNum: Int
-                    if (cardsDB.size > 16){ elementsNum = 16 }else{ elementsNum = cardsDB.size}
+                    val elementsNum: Int = if (cardsDB.size > 16){
+                        16
+                    }else{
+                        cardsDB.size
+                    }
                     val limitedList = cardsDB.take(elementsNum)
                     val shuffledList = (limitedList + limitedList).shuffled()
                     shuffledList
@@ -61,10 +63,21 @@ fun GameScr(navigateBack: () -> Unit){
                     emptyList()
                 }
             }
+            val jsonSaverList = Saver<MutableList<CardItem>, String>(
+                save = { Json.encodeToString(it.toList()) },
+                restore = { Json.decodeFromString<List<CardItem>>(it).toMutableStateList() }
+            )
+
+            val finalCardList = rememberSaveable(saver = jsonSaverList) {
+                mutableStateListOf()
+            }
+            for ((i, cardItem) in cardsList.withIndex()){
+                finalCardList.add(CardItem(i, cardItem, false))
+            }
 
             LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)){
-                items(items = cardsList) {
+                items(items = finalCardList) {
                     CardItem(item = it, vm)
                 }
             }
@@ -75,26 +88,26 @@ fun GameScr(navigateBack: () -> Unit){
 }
 
 @Composable
-fun CardItem(item: Card, viewModel: MemViewModel){
+fun CardItem(item: CardItem, viewModel: MemViewModel){
     Card(border = BorderStroke(Dp.Hairline, color = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp, 5.dp)
             .clickable(onClick = {
-                viewModel.changeCardOpen(item.id)
+                item.isFlipped = !item.isFlipped
+                viewModel.changeCardOpen(!item.isFlipped, item.id)
             }),
         shape = MaterialTheme.shapes.small
     )   {
-    }
-        var url: String?
-        if (viewModel.isCardOpen && viewModel.openCardId == item.id){
-            url = item.imageUrl
-        } else{
-            url = viewModel.decksDB.value.find { deck -> deck.id == item.deckId }?.imageUrl
+        val url: String? = if (item.isFlipped && viewModel.openCardId == item.id){
+            item.card.imageUrl
+        } else {
+            viewModel.decksDB.value.find { deck -> deck.id == item.card.deckId }?.imageUrl
         }
         AsyncImage(
             model = url,
-            contentDescription = "Icon of ${item.name}",
+            contentDescription = "",
             modifier = Modifier
                 .size(64.dp))
     }
+}

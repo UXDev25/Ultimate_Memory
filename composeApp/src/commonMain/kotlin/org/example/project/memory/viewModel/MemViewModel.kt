@@ -32,17 +32,17 @@ class MemViewModel: ViewModel() {
         loadCards(deck?.id ?: "no deck found")
     }
 
-    var isCardOpen by mutableStateOf(false)
+    var isCardFlipped by mutableStateOf(false)
         private set
-    var openCardId by mutableStateOf("")
+    var openCardId by mutableStateOf(0)
         private set
 
-    fun changeCardOpen(cardState : Boolean, cardId: String){
-        isCardOpen = cardState
+    fun changeCardOpen(cardState : Boolean){
+        isCardFlipped = cardState
     }
 
-    fun changeCardOpen(cardId: String){
-        isCardOpen = !isCardOpen
+    fun changeCardOpen(cardState : Boolean, cardId: Int){
+        isCardFlipped = !isCardFlipped
         openCardId = cardId
     }
 

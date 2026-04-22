@@ -1,11 +1,11 @@
 package org.example.project.memory.screens
 
-class CardItem {
-    var id: Int
-        get() {
-            return id
-        }
-        set(idSet: Int){
-            idSet
-        }
-}
+import kotlinx.serialization.Serializable
+import org.example.project.memory.database.Card
+
+@Serializable
+data class CardItem(
+    val id: Int,
+    val card: Card,
+    var isFlipped: Boolean = false
+)
