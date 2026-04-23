@@ -3,16 +3,21 @@ package org.example.project.memory.viewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
+import io.github.jan.supabase.auth.mfa.FactorType.Phone.value
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.example.project.memory.database.Card
 import org.example.project.memory.database.Deck
 import org.example.project.memory.database.DecksRepository
+import org.example.project.memory.screens.CardItem
 
 class MemViewModel: ViewModel() {
 
@@ -24,28 +29,72 @@ class MemViewModel: ViewModel() {
     val cardsDB: StateFlow<List<Card>> = _cards
 
     //------------------MISC------------------
+
     var selectedDeck by mutableStateOf<Deck?>(null)
         private set
 
+    var defCardList = mutableStateListOf<CardItem>()
+        private set
+
+    var remainingCardsNum by mutableStateOf(0)
+        private set
+
+    fun setRemainingCards(cardsLeft: Int){
+        remainingCardsNum = cardsLeft
+    }
+
+    class PairMutable<A, B>(var first: A, var second: B)
+    var indexPair = mutableStateOf(PairMutable(-1, -1)) // -1 means there is no card selected
+        private set
+
+    fun modifyCardList(mutableList: MutableList<CardItem>){
+        defCardList = mutableList.toMutableStateList()
+    }
     fun modifySelectedDeck(deck: Deck?){
         selectedDeck = deck
         loadCards(deck?.id ?: "no deck found")
     }
 
-    var isCardFlipped by mutableStateOf(false)
-        private set
-    var openCardId by mutableStateOf(0)
-        private set
-
-    fun changeCardOpen(cardState : Boolean){
-        isCardFlipped = cardState
+    fun onCardClicked(index: Int){
+        val indexes = Pair(indexPair.value.first, indexPair.value.second)
+        if (defCardList[index].isFlipped) return
+        if (indexes.first == -1) indexPair.value.first = index
+        if (indexes.second == -1) indexPair.value.second = index
+        flipCard(index)
+        if (indexes.first != -1 && indexes.second != -1){
+            Napier.d(tag = "MEMORY_LOG") { "[OnCardClicked] id before entering CheckCards, id 1: ${defCardList[indexes.first].card.id}, id2: ${defCardList[indexes.second].card.id}" }
+            checkCards(indexPair.value.first, indexPair.value.second)
+        }
+    }
+    fun checkCards(cardIndex1: Int, cardIndex2: Int) {
+        Napier.d(tag = "MEMORY_LOG") { "Checking cards..." }
+        val usedCards = Pair(defCardList[cardIndex1].card, defCardList[cardIndex2].card)
+        viewModelScope.launch {
+            delay(1000)
+            Napier.d(tag = "MEMORY_LOG") { "1000 miliseconds completed" }
+            if (usedCards.first.id == usedCards.second.id){
+                remainingCardsNum -= 2
+                resetIndexPair()
+                Napier.d(tag = "MEMORY_LOG") { "id are equal, id1: ${usedCards.first.id}, indexPair2: ${usedCards.second.id}" }
+                return@launch
+            }
+            flipCard(cardIndex1)
+            flipCard(cardIndex2)
+            resetIndexPair()
+        }
     }
 
-    fun changeCardOpen(cardState : Boolean, cardId: Int){
-        isCardFlipped = !isCardFlipped
-        openCardId = cardId
+    fun resetIndexPair(){
+        indexPair.value.first = -1
+        indexPair.value.second = -1
     }
 
+    fun flipCard(index: Int){
+        val actualCard = defCardList[index]
+        defCardList[index] = actualCard.copy(isFlipped = !defCardList[index].isFlipped)
+    }
+
+    //Loaders
     init{
         Napier.d(tag = "MEMORY_LOG") { "Viewmodel created" }
         Napier.d(tag = "MEMORY_LOG") { "all downloaded cards: ${_cards.value.size} cards" }

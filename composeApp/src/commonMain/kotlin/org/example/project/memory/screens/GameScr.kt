@@ -34,8 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import io.github.aakira.napier.Napier
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.example.project.memory.database.Card
 import org.example.project.memory.viewModel.MemViewModel
 import kotlin.collections.emptyList
 
@@ -63,21 +65,19 @@ fun GameScr(navigateBack: () -> Unit){
                     emptyList()
                 }
             }
-            val jsonSaverList = Saver<MutableList<CardItem>, String>(
-                save = { Json.encodeToString(it.toList()) },
-                restore = { Json.decodeFromString<List<CardItem>>(it).toMutableStateList() }
-            )
+            vm.setRemainingCards(cardsList.size)
+            val finalCardList: MutableList<CardItem> = arrayListOf()
 
-            val finalCardList = rememberSaveable(saver = jsonSaverList) {
-                mutableStateListOf()
-            }
             for ((i, cardItem) in cardsList.withIndex()){
+                //Napier.d(tag = "MEMORY_LOG") { "[GameScr] id of each card before starting game, id: ${cardItem.id}" }
                 finalCardList.add(CardItem(i, cardItem, false))
             }
 
+            vm.modifyCardList(finalCardList)
+
             LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)){
-                items(items = finalCardList) {
+                items(items = vm.defCardList) {
                     CardItem(item = it, vm)
                 }
             }
@@ -94,12 +94,12 @@ fun CardItem(item: CardItem, viewModel: MemViewModel){
             .fillMaxWidth()
             .padding(5.dp, 5.dp)
             .clickable(onClick = {
-                item.isFlipped = !item.isFlipped
-                viewModel.changeCardOpen(!item.isFlipped, item.id)
+                Napier.d(tag = "MEMORY_LOG") { "[GameScr] card clicked id: ${item.card.id}" }
+                viewModel.onCardClicked(item.id)
             }),
         shape = MaterialTheme.shapes.small
     )   {
-        val url: String? = if (item.isFlipped && viewModel.openCardId == item.id){
+        val url: String? = if (item.isFlipped){
             item.card.imageUrl
         } else {
             viewModel.decksDB.value.find { deck -> deck.id == item.card.deckId }?.imageUrl
