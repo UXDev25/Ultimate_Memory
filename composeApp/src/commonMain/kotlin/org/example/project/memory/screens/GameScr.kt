@@ -29,8 +29,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
@@ -74,15 +76,23 @@ fun GameScr(navigateBack: () -> Unit){
             }
 
             vm.modifyCardList(finalCardList)
-
-            LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)){
-                items(items = vm.defCardList) {
-                    CardItem(item = it, vm)
+            Box(contentAlignment = Alignment.Center){
+                LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)){
+                    items(items = vm.defCardList) {
+                        CardItem(item = it, vm)
+                    }
+                }
+                if (vm.isGameWon){
+                    Text("YOU WON!",
+                        fontSize = 55.sp, color = Color.Red)
                 }
             }
             Spacer(Modifier.height(24.dp))
-            Button(onClick = navigateBack) { Text("Surrender") }
+            Button(onClick = {
+                vm.resetGame()
+                navigateBack()
+            }) { Text("Surrender") }
         }
     }
 }
@@ -94,8 +104,10 @@ fun CardItem(item: CardItem, viewModel: MemViewModel){
             .fillMaxWidth()
             .padding(5.dp, 5.dp)
             .clickable(onClick = {
-                Napier.d(tag = "MEMORY_LOG") { "[GameScr] card clicked id: ${item.card.id}" }
-                viewModel.onCardClicked(item.id)
+                if (viewModel.isClickable){
+                    Napier.d(tag = "MEMORY_LOG") { "[GameScr] card clicked id: ${item.card.id}, index: ${item.id}" }
+                    viewModel.onCardClicked(item.id)
+                }
             }),
         shape = MaterialTheme.shapes.small
     )   {

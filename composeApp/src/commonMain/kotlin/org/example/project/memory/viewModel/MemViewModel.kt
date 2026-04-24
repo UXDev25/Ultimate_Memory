@@ -43,10 +43,18 @@ class MemViewModel: ViewModel() {
         remainingCardsNum = cardsLeft
     }
 
-    class PairMutable<A, B>(var first: A, var second: B)
-    var indexPair = mutableStateOf(PairMutable(-1, -1)) // -1 means there is no card selected
+    var indexList = mutableStateListOf<Int>()
         private set
 
+    var isClickable by mutableStateOf(true)
+        private set
+
+    var isGameWon by mutableStateOf(false)
+        private set
+
+    fun changeGameWon(isWon: Boolean){
+        isGameWon = isWon
+    }
     fun modifyCardList(mutableList: MutableList<CardItem>){
         defCardList = mutableList.toMutableStateList()
     }
@@ -56,42 +64,59 @@ class MemViewModel: ViewModel() {
     }
 
     fun onCardClicked(index: Int){
-        val indexes = Pair(indexPair.value.first, indexPair.value.second)
-        if (defCardList[index].isFlipped) return
-        if (indexes.first == -1) indexPair.value.first = index
-        if (indexes.second == -1) indexPair.value.second = index
+        if (defCardList[index].isFlipped || !isClickable) return
         flipCard(index)
-        if (indexes.first != -1 && indexes.second != -1){
-            Napier.d(tag = "MEMORY_LOG") { "[OnCardClicked] id before entering CheckCards, id 1: ${defCardList[indexes.first].card.id}, id2: ${defCardList[indexes.second].card.id}" }
-            checkCards(indexPair.value.first, indexPair.value.second)
+        indexList.add(defCardList[index].id)
+        if (indexList.size >= 2){
+            Napier.d(tag = "MEMORY_LOG") { "[OnCardClicked] id before entering CheckCards, id 1: ${defCardList[0].card.id}, id2: ${defCardList[1].card.id}" }
+            checkCards(indexList[0], indexList[1])
         }
     }
     fun checkCards(cardIndex1: Int, cardIndex2: Int) {
+        isClickable = false
         Napier.d(tag = "MEMORY_LOG") { "Checking cards..." }
-        val usedCards = Pair(defCardList[cardIndex1].card, defCardList[cardIndex2].card)
+        val usedCardsId = Pair(defCardList[cardIndex1].card.id, defCardList[cardIndex2].card.id)
         viewModelScope.launch {
             delay(1000)
             Napier.d(tag = "MEMORY_LOG") { "1000 miliseconds completed" }
-            if (usedCards.first.id == usedCards.second.id){
-                remainingCardsNum -= 2
-                resetIndexPair()
-                Napier.d(tag = "MEMORY_LOG") { "id are equal, id1: ${usedCards.first.id}, indexPair2: ${usedCards.second.id}" }
+            if (usedCardsId.first == usedCardsId.second){
+                if (checkIsGameWon()) return@launch
+                resetSelectAction()
+                Napier.d(tag = "MEMORY_LOG") { "id are equal, id1: ${usedCardsId.first}, indexPair2: ${usedCardsId.second}" }
                 return@launch
             }
             flipCard(cardIndex1)
             flipCard(cardIndex2)
-            resetIndexPair()
+            resetSelectAction()
         }
     }
 
-    fun resetIndexPair(){
-        indexPair.value.first = -1
-        indexPair.value.second = -1
+    fun checkIsGameWon() : Boolean{
+        remainingCardsNum -= 2
+        if (remainingCardsNum <= 0){
+            isGameWon = true
+            resetSelectAction()
+            return true
+        }
+        return false
     }
 
-    fun flipCard(index: Int){
+    private fun resetSelectAction(){
+        indexList.clear()
+        isClickable = true
+    }
+    private fun flipCard(index: Int){
         val actualCard = defCardList[index]
         defCardList[index] = actualCard.copy(isFlipped = !defCardList[index].isFlipped)
+    }
+
+    fun resetGame(){
+        resetSelectAction()
+        viewModelScope.launch {
+            delay(1000)
+            defCardList.clear()
+        }
+        Napier.d(tag = "MEMORY_LOG") { "[resetGame] defCardList size: ${defCardList.size}"}
     }
 
     //Loaders
