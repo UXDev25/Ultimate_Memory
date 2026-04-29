@@ -3,16 +3,16 @@ package org.example.project.memory.viewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
-import io.github.jan.supabase.auth.mfa.FactorType.Phone.value
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.example.project.memory.database.Card
 import org.example.project.memory.database.Deck
@@ -28,7 +28,9 @@ class MemViewModel: ViewModel() {
     private val _cards = MutableStateFlow<List<Card>>(emptyList())
     val cardsDB: StateFlow<List<Card>> = _cards
 
-    //------------------MISC------------------
+    private val _downloadedCards = MutableStateFlow<List<Card>>(emptyList())
+
+    //------------------CARDS AND IN-GAME VARIABLES------------------
 
     var selectedDeck by mutableStateOf<Deck?>(null)
         private set
@@ -55,12 +57,25 @@ class MemViewModel: ViewModel() {
     fun changeGameWon(isWon: Boolean){
         isGameWon = isWon
     }
+
+    var isGameLost by mutableStateOf(false)
+        private set
+
     fun modifyCardList(mutableList: MutableList<CardItem>){
         defCardList = mutableList.toMutableStateList()
     }
-    fun modifySelectedDeck(deck: Deck?){
+    fun modifySelectedDeck(deck: Deck?){ // set an error if deck is not downloaded
         selectedDeck = deck
+        _cards.value = emptyList()
+        _cards.value = _downloadedCards.value.filter { card -> card.deckId == deck?.id }
+    }
+
+    fun downloadCardsFromDeck(deck: Deck?) : Boolean{
+        for (card in _downloadedCards.value){
+            if (card.deckId == deck?.id) return false
+        }
         loadCards(deck?.id ?: "no deck found")
+        return true
     }
 
     fun onCardClicked(index: Int){
@@ -100,7 +115,6 @@ class MemViewModel: ViewModel() {
         }
         return false
     }
-
     private fun resetSelectAction(){
         indexList.clear()
         isClickable = true
@@ -111,7 +125,7 @@ class MemViewModel: ViewModel() {
     }
 
     fun resetGame(){
-        resetSelectAction()
+        setStartGameValues()
         viewModelScope.launch {
             delay(1000)
             defCardList.clear()
@@ -119,7 +133,13 @@ class MemViewModel: ViewModel() {
         Napier.d(tag = "MEMORY_LOG") { "[resetGame] defCardList size: ${defCardList.size}"}
     }
 
-    //Loaders
+    fun setStartGameValues(){
+        isGameWon = false
+        isGameLost = false
+        resetSelectAction()
+    }
+
+    //-------------LOADERS--------------
     init{
         Napier.d(tag = "MEMORY_LOG") { "Viewmodel created" }
         Napier.d(tag = "MEMORY_LOG") { "all downloaded cards: ${_cards.value.size} cards" }
@@ -141,13 +161,38 @@ class MemViewModel: ViewModel() {
     private fun loadCards(deckId: String) {
         viewModelScope.launch {
             try {
-                _cards.value = repository.getAllCardsFromDeck(deckId)
-                Napier.d(tag = "MEMORY_LOG") { "downloaded: ${_cards.value.size} cards" }
+                _downloadedCards.value = repository.getAllCardsFromDeck(deckId)
+                Napier.d(tag = "MEMORY_LOG") { "downloaded: ${_downloadedCards.value.size} cards" }
             } catch (e: Exception) {
                 e.printStackTrace()
                 Napier.d(tag = "MEMORY_LOG") { "failed card downloading: ${e.message}" }
             }
         }
+    }
+
+
+    //-----------------TIMER---------------------------
+
+    var timer = 1000f // 10 SECONDS (this are the seconds you want * 100)
+        private set
+    private var timeLeftVm = 0f
+    fun calculateTimePercentage(actualTime: Float): Float {
+        return actualTime / timer
+    }
+    fun timerFlow() = flow {
+        var current = timer
+        var currentAux = current
+        while (current >= 0) {
+            emit(current)
+            delay(10) // wait 0.01 second
+            current--
+            if (isGameWon){
+                currentAux = current
+                current = 0f
+                emit(currentAux)
+            }
+        }
+        if (!isGameWon) isGameLost = true;
     }
 
 
