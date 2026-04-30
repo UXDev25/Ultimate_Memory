@@ -29,23 +29,29 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
         val decksDB by viewModel.decksDB.collectAsStateWithLifecycle()
         val actualDeck = decksDB.find { deck -> deck.id == deckId }
         var canDownloadDeck by rememberSaveable{ mutableStateOf(true) }
+        var canSelectDeck by rememberSaveable{mutableStateOf(true)}
+        var activateText by rememberSaveable{mutableStateOf(false)}
 
         Napier.d(tag = "MEMORY_LOG") { "deck ID: $deckId" }
         Text("${actualDeck?.name}", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(24.dp))
         Button(onClick = {
             canDownloadDeck = viewModel.downloadCardsFromDeck(actualDeck)
+            activateText = true
         }) { Text("Download Deck") }
-        if (canDownloadDeck){
+        if (canDownloadDeck && activateText){
             Text("Downloaded Successfully!", style = MaterialTheme.typography.headlineMedium, color = Color.Green)
-        }else{
+        }else if (activateText){
             Text("You already downloaded this deck!", style = MaterialTheme.typography.headlineMedium, color = Color.Red)
         }
         Spacer(Modifier.height(24.dp))
         Button(onClick = {
-            viewModel.modifySelectedDeck(actualDeck)
-            navigateBack()
+            canSelectDeck = viewModel.modifySelectedDeck(actualDeck)
+            if (canSelectDeck){
+                navigateBack()
+            }
         }) { Text("Select Deck") }
+        if (!canSelectDeck) Text("Download the deck first please", style = MaterialTheme.typography.headlineMedium, color = Color.Red)
         Spacer(Modifier.height(24.dp))
         Button(onClick = navigateBack) { Text("Go back") }
     }

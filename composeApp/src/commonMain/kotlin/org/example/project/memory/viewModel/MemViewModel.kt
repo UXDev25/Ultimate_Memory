@@ -64,10 +64,13 @@ class MemViewModel: ViewModel() {
     fun modifyCardList(mutableList: MutableList<CardItem>){
         defCardList = mutableList.toMutableStateList()
     }
-    fun modifySelectedDeck(deck: Deck?){ // set an error if deck is not downloaded
+    fun modifySelectedDeck(deck: Deck?) : Boolean{ // set an error if deck is not downloaded
         selectedDeck = deck
         _cards.value = emptyList()
         _cards.value = _downloadedCards.value.filter { card -> card.deckId == deck?.id }
+        if (_cards.value.count() == 0) return false
+
+        return true
     }
 
     fun downloadCardsFromDeck(deck: Deck?) : Boolean{
