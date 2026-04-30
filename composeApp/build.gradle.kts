@@ -51,6 +51,7 @@ kotlin {
             implementation(libs.ktor.client.android.vlatestversion)
             // Ktor (Motor de xarxa per Android)
             implementation("io.ktor:ktor-client-android:3.4.2")
+
         }
         iosMain.dependencies {
             // Motor de xarxa per a iOS necessari per Supabase
@@ -85,7 +86,14 @@ kotlin {
 
         }
         commonTest.dependencies {
-            implementation(libs.kotlin.test)
+            //Testing
+            implementation(kotlin("test"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+        }
+        androidUnitTest.dependencies{
+            //Testing
+            implementation(kotlin("test-junit"))
+            implementation(libs.androidx.core.testing)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -176,7 +176,7 @@ class MemViewModel: ViewModel() {
 
     //-----------------TIMER---------------------------
 
-    var timer = 1000f // 10 SECONDS (this are the seconds you want * 100)
+    var timer = 10000f // 100 SECONDS (this are the seconds you want * 100)
         private set
     private var timeLeftVm = 0f
     fun calculateTimePercentage(actualTime: Float): Float {

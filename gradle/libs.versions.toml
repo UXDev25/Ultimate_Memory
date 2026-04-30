@@ -25,6 +25,7 @@ napier = "2.7.1"
 postgrestKt = "3.5.0"
 storageKt = "latest_version"
 supabaseVersion = "3.0.2"
+archCoreTesting = "2.2.0"
 
 [libraries]
 jlayer = { module = "javazoom:jlayer", version.ref = "jlayer" }
@@ -55,6 +56,7 @@ napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabaseVersion" }
 postgrest-kt-v350 = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "postgrestKt" }
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "storageKt" }
+androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCoreTesting" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
