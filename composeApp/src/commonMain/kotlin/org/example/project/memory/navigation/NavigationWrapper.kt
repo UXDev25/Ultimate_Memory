@@ -4,10 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import io.ktor.http.parameters
-import kotlinx.coroutines.NonCancellable.key
 import org.example.project.memory.screens.DeckDetailScr
-import org.example.project.memory.screens.DeckSelectorScr
+import org.example.project.memory.screens.DeckGameSelectorScr
+import org.example.project.memory.screens.DeckInfoSelectorScr
 import org.example.project.memory.screens.GameScr
 import org.example.project.memory.screens.MainMenuScr
 import org.example.project.memory.screens.SettingsScr
@@ -22,15 +21,22 @@ fun NavigationWrapper(viewModel: MemViewModel){
         entryProvider = entryProvider {
             entry<Route.MainMenuRoute> {
                 MainMenuScr(
-                    navigateTo1 = { backStack.add(Route.DeckSelectorRoute) },
-                    navigateTo2 = { backStack.add(Route.GameRoute) },
+                    navigateTo1 = { backStack.add(Route.DeckInfoSelectorRoute) },
+                    navigateTo2 = { backStack.add(Route.DeckGameSelectorRoute) },
                     navigateTo3 = { backStack.add(Route.SettingsRoute) },
                 )
             }
-            entry<Route.DeckSelectorRoute> {
-                DeckSelectorScr(
+            entry<Route.DeckInfoSelectorRoute> {
+                DeckInfoSelectorScr(
                     navigateBack = { backStack.removeLastOrNull() },
                     navigateToDetail = { backStack.add(Route.DeckDetailRoute(deckId = it)) },
+                    viewModel = viewModel
+                )
+            }
+            entry<Route.DeckGameSelectorRoute> {
+                DeckGameSelectorScr(
+                    navigateBack = { backStack.removeLastOrNull() },
+                    navigateToGame = { backStack.add(Route.GameRoute) },
                     viewModel = viewModel
                 )
             }

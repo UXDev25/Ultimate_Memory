@@ -22,6 +22,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,20 +42,21 @@ import kotlin.collections.emptyList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameScr(navigateBack: () -> Unit){
+fun GameScr(navigateBack: () -> Unit) {
     val vm: MemViewModel = viewModel { MemViewModel() }
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize(1f)){
-        Column(horizontalAlignment = Alignment.CenterHorizontally,
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize(1f)) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             //GETTING AND SHUFFLING CARDS
             val cardsDB by vm.cardsDB.collectAsStateWithLifecycle()
             val cardsList = remember(cardsDB) {
                 if (cardsDB.isNotEmpty()) {
-                    val elementsNum: Int = if (cardsDB.size > 16){
+                    val elementsNum: Int = if (cardsDB.size > 16) {
                         16
-                    }else{
+                    } else {
                         cardsDB.size
                     }
                     val limitedList = cardsDB.take(elementsNum)
@@ -64,16 +66,16 @@ fun GameScr(navigateBack: () -> Unit){
                     emptyList()
                 }
             }
+            Napier.d(tag = "MEMORY_LOG"){"[GameScr] size de cardsList: ${cardsList.size}"}
             vm.setRemainingCards(cardsList.size)
             val finalCardList: MutableList<CardItem> = arrayListOf()
 
-            for ((i, cardItem) in cardsList.withIndex()){
+            for ((i, cardItem) in cardsList.withIndex()) {
                 //Napier.d(tag = "MEMORY_LOG") { "[GameScr] id of each card before starting game, id: ${cardItem.id}" }
                 finalCardList.add(CardItem(i, cardItem, false))
             }
             vm.modifyCardList(finalCardList)
 
-            vm.setStartGameValues() // Prevents the user starting a game without passing through resetGame()
 
             //TIMER
 
@@ -81,21 +83,27 @@ fun GameScr(navigateBack: () -> Unit){
             Spacer(Modifier.height(24.dp))
 
             //CARDS VIEW
-            Box(contentAlignment = Alignment.Center){
-                LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)){
+            Box(contentAlignment = Alignment.Center) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4), modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
                     items(items = vm.defCardList) {
                         CardItem(item = it, vm)
                     }
                 }
-                if (vm.isGameWon){
-                    Text("YOU WON!",
-                        fontSize = 55.sp, color = Color.Red)
+                if (vm.isGameWon) {
+                    Text(
+                        "YOU WON!",
+                        fontSize = 55.sp, color = Color.Green
+                    )
                 }
-                if (vm.isGameLost){
+                if (vm.isGameLost) {
                     Napier.d(tag = "MEMORY_LOG") { "[GameScr] reached isGameLost" }
-                    Text("YOU LOST...",
-                        fontSize = 55.sp, color = Color.Red)
+                    Text(
+                        "YOU LOST...",
+                        fontSize = 55.sp, color = Color.Red
+                    )
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -150,3 +158,4 @@ fun Timer(viewModel: MemViewModel){
         text = "Temps: $timeLeft"
     )
 }
+

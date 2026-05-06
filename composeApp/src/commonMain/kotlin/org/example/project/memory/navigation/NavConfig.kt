@@ -10,7 +10,8 @@ val navConfig = SavedStateConfiguration {
         polymorphic(NavKey::class) {
             subclass(Route.MainMenuRoute::class, Route.MainMenuRoute.serializer())
             subclass(Route.GameRoute::class, Route.GameRoute.serializer())
-            subclass(Route.DeckSelectorRoute::class, Route.DeckSelectorRoute.serializer())
+            subclass(Route.DeckGameSelectorRoute::class, Route.DeckGameSelectorRoute.serializer())
+            subclass(Route.DeckInfoSelectorRoute::class, Route.DeckInfoSelectorRoute.serializer())
             subclass(Route.DeckDetailRoute::class, Route.DeckDetailRoute.serializer())
             subclass(Route.SettingsRoute::class, Route.SettingsRoute.serializer())
         }

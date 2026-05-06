@@ -9,7 +9,9 @@ sealed class Route: NavKey {
     @Serializable
     data object GameRoute : Route()
     @Serializable
-    data object DeckSelectorRoute : Route()
+    data object DeckInfoSelectorRoute : Route()
+    @Serializable
+    data object DeckGameSelectorRoute : Route()
     @Serializable
     data object SettingsRoute : Route()
     @Serializable

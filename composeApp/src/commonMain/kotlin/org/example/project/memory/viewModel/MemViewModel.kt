@@ -63,7 +63,10 @@ class MemViewModel: ViewModel() {
 
     fun modifyCardList(mutableList: MutableList<CardItem>){
         defCardList = mutableList.toMutableStateList()
+        Napier.d(tag ="MEMORY_LOG"){"[modifyCardList] defCardList size: ${defCardList.size}"}
     }
+
+    //REMOVE THIS BELOW
     fun modifySelectedDeck(deck: Deck?) : Boolean{ // set an error if deck is not downloaded
         selectedDeck = deck
         _cards.value = emptyList()
@@ -77,8 +80,22 @@ class MemViewModel: ViewModel() {
         for (card in _downloadedCards.value){
             if (card.deckId == deck?.id) return false
         }
-        loadCards(deck?.id ?: "no deck found")
+        //loadCards(deck?.id ?: "no deck found")
+        if (!modifySelectedDeck(deck)) return false
+
         return true
+    }
+    //REMOVE THIS ABOVE
+
+    suspend fun selectAndDownloadDeck(deck: Deck?): Boolean {
+        val deckId = deck?.id ?: return false
+
+        val alreadyDownloaded = _downloadedCards.value.filter { it.deckId == deckId }
+        if (alreadyDownloaded.isNotEmpty()) {
+            _cards.value = alreadyDownloaded
+            return true
+        }
+        return loadCards(deck.id)
     }
 
     fun onCardClicked(index: Int){
@@ -128,7 +145,6 @@ class MemViewModel: ViewModel() {
     }
 
     fun resetGame(){
-        setStartGameValues()
         viewModelScope.launch {
             delay(1000)
             defCardList.clear()
@@ -161,22 +177,21 @@ class MemViewModel: ViewModel() {
             }
         }
     }
-    private fun loadCards(deckId: String) {
-        viewModelScope.launch {
-            try {
-                _downloadedCards.value = repository.getAllCardsFromDeck(deckId)
-                Napier.d(tag = "MEMORY_LOG") { "downloaded: ${_downloadedCards.value.size} cards" }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Napier.d(tag = "MEMORY_LOG") { "failed card downloading: ${e.message}" }
-            }
+    private suspend fun loadCards(deckId: String): Boolean {
+        return try {
+            val newCards = repository.getAllCardsFromDeck(deckId)
+            _downloadedCards.value += newCards
+            _cards.value = newCards
+            newCards.isNotEmpty()
+        } catch (e: Exception) {
+            false
         }
     }
 
 
     //-----------------TIMER---------------------------
 
-    var timer = 10000f // 100 SECONDS (this are the seconds you want * 100)
+    var timer = 5000f // 50 SECONDS (this are the seconds you want * 100)
         private set
     private var timeLeftVm = 0f
     fun calculateTimePercentage(actualTime: Float): Float {
@@ -195,7 +210,9 @@ class MemViewModel: ViewModel() {
                 emit(currentAux)
             }
         }
+        Napier.d(tag = "MEMORY_LOG"){"[memViewModel] reached timerFlow End"}
         if (!isGameWon) isGameLost = true;
+        Napier.d(tag = "MEMORY_LOG"){"[memViewModel] isGameLost Value = $isGameLost"}
     }
 
 

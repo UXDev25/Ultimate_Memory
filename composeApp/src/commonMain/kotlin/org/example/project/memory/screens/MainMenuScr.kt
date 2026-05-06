@@ -13,12 +13,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.example.project.memory.viewModel.MemViewModel
 import org.jetbrains.compose.resources.painterResource
 import ultimate_memory.composeapp.generated.resources.Res
 import ultimate_memory.composeapp.generated.resources.momazosdiego
 
 @Composable
 fun MainMenuScr(navigateTo1: () -> Unit, navigateTo2: () -> Unit, navigateTo3: () -> Unit){
+    val vm: MemViewModel = viewModel { MemViewModel() }
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
         Image(painterResource(Res.drawable.momazosdiego), contentDescription = "momazos diego ahhgagaagagahh")
@@ -27,7 +30,10 @@ fun MainMenuScr(navigateTo1: () -> Unit, navigateTo2: () -> Unit, navigateTo3: (
         Spacer(Modifier.height(24.dp))
         Button(onClick = navigateTo1) { Text("Select Deck") }
         Spacer(Modifier.height(24.dp))
-        Button(onClick = navigateTo2) { Text("Play") }
+        Button(onClick = {
+            vm.setStartGameValues()
+            navigateTo2()
+        }) { Text("Play") }
         Spacer(Modifier.height(8.dp))
         Button(onClick = navigateTo3) { Text("Settings") }
     }
