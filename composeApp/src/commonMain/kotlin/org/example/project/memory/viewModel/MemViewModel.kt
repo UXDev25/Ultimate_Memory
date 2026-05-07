@@ -1,11 +1,14 @@
 package org.example.project.memory.viewModel
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
@@ -18,6 +21,7 @@ import org.example.project.memory.database.Card
 import org.example.project.memory.database.Deck
 import org.example.project.memory.database.DecksRepository
 import org.example.project.memory.screens.CardItem
+import kotlin.collections.emptyList
 
 class MemViewModel: ViewModel() {
 
@@ -61,31 +65,60 @@ class MemViewModel: ViewModel() {
     var isGameLost by mutableStateOf(false)
         private set
 
-    fun modifyCardList(mutableList: MutableList<CardItem>){
-        defCardList = mutableList.toMutableStateList()
+    fun modifyCardList(cardsList: List<Card>){
+        val finalCardList: MutableList<CardItem> = arrayListOf()
+        for ((i, cardItem) in cardsList.withIndex()) {
+            Napier.d(tag = "MEMORY_LOG") { "[modifyCardList] id of each card before starting game, id: ${cardItem.id}" }
+            finalCardList.add(CardItem(i, cardItem, false))
+        }
+        defCardList = finalCardList.toMutableStateList()
         Napier.d(tag ="MEMORY_LOG"){"[modifyCardList] defCardList size: ${defCardList.size}"}
     }
 
-    //REMOVE THIS BELOW
-    fun modifySelectedDeck(deck: Deck?) : Boolean{ // set an error if deck is not downloaded
-        selectedDeck = deck
-        _cards.value = emptyList()
-        _cards.value = _downloadedCards.value.filter { card -> card.deckId == deck?.id }
-        if (_cards.value.count() == 0) return false
-
-        return true
-    }
-
-    fun downloadCardsFromDeck(deck: Deck?) : Boolean{
-        for (card in _downloadedCards.value){
-            if (card.deckId == deck?.id) return false
+    //GETTING AND SHUFFLING CARDS
+    /* val cardsList = remember(cardsDB) {
+        if (cardsDB.isNotEmpty()) {
+            val elementsNum: Int = if (cardsDB.size > 16) {
+                16
+            } else {
+                cardsDB.size
+            }
+            val limitedList = cardsDB.take(elementsNum)
+            val shuffledList = (limitedList + limitedList).shuffled()
+            shuffledList
+        } else {
+            emptyList()
         }
-        //loadCards(deck?.id ?: "no deck found")
-        if (!modifySelectedDeck(deck)) return false
-
-        return true
     }
-    //REMOVE THIS ABOVE
+    Napier.d(tag = "MEMORY_LOG"){"[GameScr] size de cardsList: ${cardsList.size}"}
+    vm.
+    val finalCardList: MutableList<CardItem> = arrayListOf()
+
+    for ((i, cardItem) in cardsList.withIndex()) {
+        //Napier.d(tag = "MEMORY_LOG") { "[GameScr] id of each card before starting game, id: ${cardItem.id}" }
+        finalCardList.add(CardItem(i, cardItem, false))
+    }
+    vm.modifyCardList(finalCardList)*/
+
+    fun CreateInGameDeck(){
+        val cardsList: List<Card>
+        if (_cards.value.isNotEmpty()) {
+            val elementsNum: Int = if (_cards.value.size > 16) {
+                16
+            } else {
+                _cards.value.size
+            }
+            val limitedList = _cards.value.take(elementsNum)
+            val shuffledList = (limitedList + limitedList).shuffled()
+            cardsList = shuffledList
+        } else {
+            cardsList = emptyList()
+            Napier.d(tag ="MEMORY_LOG"){"[CreateInGameDeck] value in _cards not found"}
+        }
+        Napier.d(tag = "MEMORY_LOG"){"[CreateInGameDeck] size de cardsList: ${cardsList.size}"}
+        setRemainingCards(cardsList.size)
+        modifyCardList(cardsList)
+    }
 
     suspend fun selectAndDownloadDeck(deck: Deck?): Boolean {
         val deckId = deck?.id ?: return false
@@ -150,6 +183,7 @@ class MemViewModel: ViewModel() {
             defCardList.clear()
         }
         Napier.d(tag = "MEMORY_LOG") { "[resetGame] defCardList size: ${defCardList.size}"}
+        setStartGameValues()
     }
 
     fun setStartGameValues(){

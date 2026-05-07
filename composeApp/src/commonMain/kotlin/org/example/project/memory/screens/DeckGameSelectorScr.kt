@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import io.github.aakira.napier.Napier
@@ -168,6 +169,7 @@ fun DeckGameItem(actualDeck: Deck, navigateToGame: () -> Unit, viewModel: MemVie
     Napier.d(tag = "MEMORY_LOG") { "Deck item func reached" }
     Card(border = BorderStroke(Dp.Hairline, color = MaterialTheme.colorScheme.surface),
         modifier = Modifier
+            .testTag("deckItem_id")
             .fillMaxWidth()
             .padding(5.dp, 5.dp)
             .clickable(enabled = !isDownloading){
@@ -176,6 +178,7 @@ fun DeckGameItem(actualDeck: Deck, navigateToGame: () -> Unit, viewModel: MemVie
                     val success = viewModel.selectAndDownloadDeck(actualDeck)
                     isDownloading = false
                     if (success) {
+                        viewModel.CreateInGameDeck()
                         navigateToGame()
                     } else {
                         Napier.e(tag = "MEMORY_LOG") { "[GameScr] Error descarregant el deck" }

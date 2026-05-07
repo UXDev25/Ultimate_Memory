@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.example.project.memory.viewModel.MemViewModel
@@ -28,13 +29,13 @@ fun MainMenuScr(navigateTo1: () -> Unit, navigateTo2: () -> Unit, navigateTo3: (
         Spacer(Modifier.height(24.dp))
         Text("Main Menu", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(24.dp))
-        Button(onClick = navigateTo1) { Text("Select Deck") }
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = {
+        Button(modifier = Modifier.testTag("playButton_id"),onClick = {
             vm.setStartGameValues()
             navigateTo2()
         }) { Text("Play") }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = navigateTo1) { Text("View Decks") }
+        Spacer(Modifier.height(24.dp))
         Button(onClick = navigateTo3) { Text("Settings") }
     }
 }

@@ -40,7 +40,7 @@ class ViewModelUnitTest {
         advanceUntilIdle()
 
         if (viewModel.decksDB.value.isNotEmpty()) {
-            viewModel.downloadCardsFromDeck(viewModel.decksDB.value[0])
+            viewModel.selectAndDownloadDeck(viewModel.decksDB.value[0])
 
             advanceUntilIdle()
 

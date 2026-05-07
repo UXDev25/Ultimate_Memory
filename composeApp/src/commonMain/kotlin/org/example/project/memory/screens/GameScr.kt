@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,35 +51,8 @@ fun GameScr(navigateBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            //GETTING AND SHUFFLING CARDS
-            val cardsDB by vm.cardsDB.collectAsStateWithLifecycle()
-            val cardsList = remember(cardsDB) {
-                if (cardsDB.isNotEmpty()) {
-                    val elementsNum: Int = if (cardsDB.size > 16) {
-                        16
-                    } else {
-                        cardsDB.size
-                    }
-                    val limitedList = cardsDB.take(elementsNum)
-                    val shuffledList = (limitedList + limitedList).shuffled()
-                    shuffledList
-                } else {
-                    emptyList()
-                }
-            }
-            Napier.d(tag = "MEMORY_LOG"){"[GameScr] size de cardsList: ${cardsList.size}"}
-            vm.setRemainingCards(cardsList.size)
-            val finalCardList: MutableList<CardItem> = arrayListOf()
-
-            for ((i, cardItem) in cardsList.withIndex()) {
-                //Napier.d(tag = "MEMORY_LOG") { "[GameScr] id of each card before starting game, id: ${cardItem.id}" }
-                finalCardList.add(CardItem(i, cardItem, false))
-            }
-            vm.modifyCardList(finalCardList)
-
 
             //TIMER
-
             Timer(vm)
             Spacer(Modifier.height(24.dp))
 
@@ -107,7 +81,7 @@ fun GameScr(navigateBack: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(24.dp))
-            Button(onClick = {
+            Button(modifier = Modifier.testTag("surrender_id"),onClick = {
                 vm.resetGame()
                 navigateBack()
             }) { Text("Surrender") }

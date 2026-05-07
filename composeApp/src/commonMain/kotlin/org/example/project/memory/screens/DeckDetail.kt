@@ -16,8 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import io.github.aakira.napier.Napier
 import org.example.project.memory.viewModel.MemViewModel
 
@@ -28,30 +31,13 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
     ) {
         val decksDB by viewModel.decksDB.collectAsStateWithLifecycle()
         val actualDeck = decksDB.find { deck -> deck.id == deckId }
-        var canDownloadDeck by rememberSaveable{ mutableStateOf(true) }
-        var canSelectDeck by rememberSaveable{mutableStateOf(true)}
-        var activateText by rememberSaveable{mutableStateOf(false)}
-
-        Napier.d(tag = "MEMORY_LOG") { "deck ID: $deckId" }
+        AsyncImage(
+            model = actualDeck?.imageUrl,
+            contentDescription = "${actualDeck?.name}'s logo"
+        )
         Text("${actualDeck?.name}", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(24.dp))
-        Button(onClick = {
-            canDownloadDeck = viewModel.downloadCardsFromDeck(actualDeck)
-            activateText = true
-        }) { Text("Download Deck") }
-        if (canDownloadDeck && activateText){
-            Text("Downloaded Successfully!", style = MaterialTheme.typography.headlineMedium, color = Color.Green)
-        }else if (activateText){
-            Text("You already downloaded this deck!", style = MaterialTheme.typography.headlineMedium, color = Color.Red)
-        }
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = {
-            canSelectDeck = viewModel.modifySelectedDeck(actualDeck)
-            if (canSelectDeck){
-                navigateBack()
-            }
-        }) { Text("Select Deck") }
-        if (!canSelectDeck) Text("Download the deck first please", style = MaterialTheme.typography.headlineMedium, color = Color.Red)
+        Text("${actualDeck?.description}", fontSize = 20.sp)
         Spacer(Modifier.height(24.dp))
         Button(onClick = navigateBack) { Text("Go back") }
     }

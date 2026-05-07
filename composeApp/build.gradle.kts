@@ -53,6 +53,13 @@ kotlin {
             implementation("io.ktor:ktor-client-android:3.4.2")
 
         }
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation("androidx.compose.ui:ui-test-junit4-android:1.6.0")
+                implementation("androidx.compose.ui:ui-test-manifest:1.6.0")
+            }
+        }
         iosMain.dependencies {
             // Motor de xarxa per a iOS necessari per Supabase
             implementation("io.ktor:ktor-client-darwin:3.4.2")
@@ -91,15 +98,18 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
         }
         androidUnitTest.dependencies{
-            //Testing
             implementation(kotlin("test-junit"))
             implementation(libs.androidx.core.testing)
+            implementation("androidx.compose.ui:ui-test-junit4-android:2.0.0")
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.jlayer)
         }
+    }
+    sourceSets.androidInstrumentedTest.dependencies {
+        implementation(kotlin("test"))
     }
 }
 

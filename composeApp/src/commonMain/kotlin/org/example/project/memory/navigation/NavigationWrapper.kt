@@ -47,7 +47,14 @@ fun NavigationWrapper(viewModel: MemViewModel){
                 )
             }
             entry<Route.GameRoute> {
-                GameScr(navigateBack = { backStack.removeLastOrNull() })
+                GameScr(navigateBack = { val index = backStack.indexOfFirst { it is Route.MainMenuRoute }
+                    if (index != -1) {
+                        while (backStack.size > index + 1) {
+                            backStack.removeLastOrNull()
+                        }
+                    } else {
+                        backStack.removeLastOrNull()
+                    } })
             }
             entry<Route.SettingsRoute> {
                 SettingsScr(
