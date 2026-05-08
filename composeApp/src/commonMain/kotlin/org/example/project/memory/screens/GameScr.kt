@@ -1,5 +1,7 @@
 package org.example.project.memory.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -25,12 +28,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -91,9 +102,17 @@ fun GameScr(navigateBack: () -> Unit) {
 
 @Composable
 fun CardItem(item: CardItem, viewModel: MemViewModel){
+    val rotation by animateFloatAsState(
+        targetValue = if (item.isFlipped) 180f else 0f,
+        animationSpec = tween(durationMillis = 500),
+        label = "CardRotation"
+    )
     Card(border = BorderStroke(Dp.Hairline, color = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                rotationY = rotation
+                cameraDistance = 12f * density }
             .padding(5.dp, 5.dp)
             .clickable(onClick = {
                 if (viewModel.isClickable && !viewModel.isGameLost){
@@ -101,18 +120,32 @@ fun CardItem(item: CardItem, viewModel: MemViewModel){
                     viewModel.onCardClicked(item.id)
                 }
             }),
-        shape = MaterialTheme.shapes.small
+        shape = MaterialTheme.shapes.small,
+        elevation = CardDefaults.cardElevation(4.dp)
     )   {
-        val url: String? = if (item.isFlipped){
-            item.card.imageUrl
-        } else {
-            viewModel.decksDB.value.find { deck -> deck.id == item.card.deckId }?.imageUrl
+        Box(contentAlignment = Alignment.Center){
+            if (rotation <= 90){
+                AsyncImage(
+                    model = viewModel.decksDB.value.find { deck -> deck.id == item.card.deckId }?.imageUrl,
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.TopCenter,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(MaterialTheme.shapes.small))
+            }
+            else{
+                AsyncImage(
+                    model = item.card.imageUrl,
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.TopCenter,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(MaterialTheme.shapes.small))
+            }
         }
-        AsyncImage(
-            model = url,
-            contentDescription = "",
-            modifier = Modifier
-                .size(64.dp))
+
     }
 }
 
@@ -129,7 +162,7 @@ fun Timer(viewModel: MemViewModel){
     )
 
     Text(
-        text = "Temps: $timeLeft"
+        text = "Temps: ${timeLeft / 100}"
     )
 }
 

@@ -1,4 +1,5 @@
 [versions]
+kotlinx-datetime = "0.6.1"
 androidx-testExt = "1.3.0"
 androidx-espresso = "3.7.0"
 uiTestJunit4 = "1.11.1"
@@ -31,6 +32,7 @@ room3ExternalAntlr = "3.0.0-alpha04"
 
 
 [libraries]
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 jlayer = { module = "javazoom:jlayer", version.ref = "jlayer" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
