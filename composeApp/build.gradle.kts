@@ -56,8 +56,8 @@ kotlin {
         val androidInstrumentedTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("androidx.compose.ui:ui-test-junit4-android:1.6.0")
-                implementation("androidx.compose.ui:ui-test-manifest:1.6.0")
+                implementation("androidx.compose.ui:ui-test-junit4-android:1.10.3")
+                implementation("androidx.compose.ui:ui-test-manifest:1.10.3")
             }
         }
         iosMain.dependencies {
@@ -123,6 +123,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     packaging {
         resources {
