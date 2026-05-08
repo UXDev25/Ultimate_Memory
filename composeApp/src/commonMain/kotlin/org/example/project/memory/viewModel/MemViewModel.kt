@@ -244,9 +244,7 @@ class MemViewModel: ViewModel() {
                 emit(currentAux)
             }
         }
-        Napier.d(tag = "MEMORY_LOG"){"[memViewModel] reached timerFlow End"}
         if (!isGameWon) isGameLost = true;
-        Napier.d(tag = "MEMORY_LOG"){"[memViewModel] isGameLost Value = $isGameLost"}
     }
 
 
