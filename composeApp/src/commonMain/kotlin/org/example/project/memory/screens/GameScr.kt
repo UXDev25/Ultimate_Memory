@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,146 +24,189 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import io.github.aakira.napier.Napier
 import org.example.project.memory.viewModel.MemViewModel
-import kotlin.collections.emptyList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScr(navigateBack: () -> Unit) {
     val vm: MemViewModel = viewModel { MemViewModel() }
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize(1f)) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color(0xFF121212)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Spacer(Modifier.height(40.dp))
 
-            //TIMER
-            Timer(vm)
-            Spacer(Modifier.height(24.dp))
+                Timer(vm)
 
-            //CARDS VIEW
-            Box(contentAlignment = Alignment.Center) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4), modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
+                Spacer(Modifier.height(32.dp))
+
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
-                    items(items = vm.defCardList) {
-                        CardItem(item = it, vm)
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(4),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(items = vm.defCardList) {
+                            CardItem(item = it, vm)
+                        }
                     }
                 }
-                if (vm.isGameWon) {
-                    Text(
-                        "YOU WON!",
-                        fontSize = 55.sp, color = Color.Green
-                    )
+
+                Spacer(Modifier.height(24.dp))
+
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .testTag("surrender_id"),
+                    onClick = {
+                        vm.resetGame()
+                        navigateBack()
+                    }
+                ) {
+                    Text("Surrender", fontSize = 18.sp)
                 }
-                if (vm.isGameLost) {
-                    Napier.d(tag = "MEMORY_LOG") { "[GameScr] reached isGameLost" }
-                    Text(
-                        "YOU LOST...",
-                        fontSize = 55.sp, color = Color.Red
-                    )
-                }
+                Spacer(Modifier.height(40.dp))
             }
-            Spacer(Modifier.height(24.dp))
-            Button(modifier = Modifier.testTag("surrender_id"),onClick = {
-                vm.resetGame()
-                navigateBack()
-            }) { Text("Surrender") }
+
+            if (vm.isGameWon || vm.isGameLost) {
+                EndGameOverlay(isWin = vm.isGameWon)
+            }
         }
     }
 }
 
 @Composable
-fun CardItem(item: CardItem, viewModel: MemViewModel){
+fun CardItem(item: CardItem, viewModel: MemViewModel) {
     val rotation by animateFloatAsState(
         targetValue = if (item.isFlipped) 180f else 0f,
         animationSpec = tween(durationMillis = 500),
         label = "CardRotation"
     )
-    Card(border = BorderStroke(Dp.Hairline, color = MaterialTheme.colorScheme.surface),
+
+    Card(
+        border = BorderStroke(2.dp, if (item.isFlipped) Color(0xFFFFD700) else Color(0xFF444444)), // Marc daurat si està girada
         modifier = Modifier
-            .fillMaxWidth()
+            .aspectRatio(0.75f)
             .graphicsLayer {
                 rotationY = rotation
-                cameraDistance = 12f * density }
-            .padding(5.dp, 5.dp)
-            .clickable(onClick = {
-                if (viewModel.isClickable && !viewModel.isGameLost){
-                    Napier.d(tag = "MEMORY_LOG") { "[GameScr] card clicked id: ${item.card.id}, index: ${item.id}" }
-                    viewModel.onCardClicked(item.id)
-                }
-            }),
-        shape = MaterialTheme.shapes.small,
-        elevation = CardDefaults.cardElevation(4.dp)
-    )   {
-        Box(contentAlignment = Alignment.Center){
-            if (rotation <= 90){
+                cameraDistance = 12f * density
+            }
+            .clickable(
+                enabled = !item.isFlipped && !viewModel.isGameLost && viewModel.isClickable,
+                onClick = { viewModel.onCardClicked(item.id) }
+            ),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            if (rotation <= 90f) {
                 AsyncImage(
-                    model = viewModel.decksDB.value.find { deck -> deck.id == item.card.deckId }?.imageUrl,
+                    model = viewModel.decksDB.value.find { it.id == item.card.deckId }?.imageUrl,
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
                     alignment = Alignment.TopCenter,
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(MaterialTheme.shapes.small))
-            }
-            else{
+                    modifier = Modifier.fillMaxSize().padding(4.dp).clip(MaterialTheme.shapes.small)
+                )
+            } else {
                 AsyncImage(
                     model = item.card.imageUrl,
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
                     alignment = Alignment.TopCenter,
                     modifier = Modifier
-                        .size(64.dp)
-                        .clip(MaterialTheme.shapes.small))
+                        .fillMaxSize()
+                        .padding(4.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .graphicsLayer { rotationY = 180f }
+                )
             }
         }
+    }
+}
+@Composable
+fun Timer(viewModel: MemViewModel) {
+    val timeLeft by remember { viewModel.timerFlow() }.collectAsState(initial = viewModel.timer.toFloat())
+    val progress = viewModel.calculateTimePercentage(timeLeft.toFloat())
 
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "TIME LEFT: ${timeLeft.toInt()}s",
+            color = if (timeLeft < 10) Color.Red else Color.White,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        LinearProgressIndicator(
+            progress = { progress },
+            color = when {
+                progress > 0.6f -> Color.Green
+                progress > 0.3f -> Color.Yellow
+                else -> Color.Red
+            },
+            trackColor = Color(0xFF333333),
+            strokeCap = StrokeCap.Round,
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .height(12.dp)
+                .clip(MaterialTheme.shapes.large)
+        )
     }
 }
 
 @Composable
-fun Timer(viewModel: MemViewModel){
-    val timeLeft by remember { viewModel.timerFlow() }.collectAsState(initial = viewModel.timer)
-    LinearProgressIndicator(
-        progress = {viewModel.calculateTimePercentage(timeLeft)},
-        color = Color.Black,
-        trackColor = Color.Gray,
-        strokeCap = StrokeCap.Butt,
+fun EndGameOverlay(isWin: Boolean) {
+    Box(
         modifier = Modifier
-            .height(15.dp)
-    )
-
-    Text(
-        text = "Temps: ${timeLeft / 100}"
-    )
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.7f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = if (isWin) "VICTORY!" else "GAME OVER",
+                fontSize = 60.sp,
+                color = if (isWin) Color(0xFFFFD700) else Color.Red,
+                style = MaterialTheme.typography.displayLarge
+            )
+            Text(
+                text = if (isWin) "Well done, Champion!" else "Try again, don't give up!",
+                color = Color.White,
+                fontSize = 18.sp
+            )
+        }
+    }
 }
 

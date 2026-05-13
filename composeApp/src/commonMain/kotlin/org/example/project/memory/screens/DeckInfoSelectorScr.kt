@@ -4,7 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,11 +35,28 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.example.project.memory.viewModel.MemViewModel
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import coil3.compose.AsyncImage
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.launch
 import org.example.project.memory.database.Deck
 
 
@@ -47,137 +66,150 @@ fun DeckInfoSelectorScr(
     navigateToDetail: (String) -> Unit,
     navigateBack: () -> Unit,
     viewModel: MemViewModel
-){
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color(0xFF121212)
     ) {
-        Spacer(Modifier.height(54.dp))
-        Text("Select Deck", style = MaterialTheme.typography.headlineMedium)
-        Button(onClick = navigateBack) { Text("Go Back") }
-        Column(modifier = Modifier.fillMaxSize(1f),
-            verticalArrangement = Arrangement.SpaceBetween) {
-            //Search bar
-            SearchBar(
-                query = viewModel.searchedText,
-                onQueryChange = { viewModel.onSearchTextChange(it) },
-                onSearch = { viewModel.onSearch(it) },
-                active = viewModel.active,
-                onActiveChange = { viewModel.onActiveChange(it) },
-                placeholder = {
-                    Text(
-                        "Search for a marker...",
-                        color = MaterialTheme.colorScheme.onSecondary
-                    )
-                },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (viewModel.active) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            modifier = Modifier.clickable {
-
-                                if (viewModel.searchedText.isNotEmpty()) {
-                                    viewModel.onSearchTextChange("")
-                                } else {
-                                    viewModel.onActiveChange(false)
-                                }
-                            }
-                        )
-                    }
-                }
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 48.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // --- ZONA DE CONTINGUT DE LA BARRA ---
+                IconButton(onClick = navigateBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+                Text(
+                    text = "DECK LIBRARY",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
 
-                // CAS A: L'usuari està escrivint -> Ensenyem RESULTATS (Cards)
-                if (viewModel.searchedText.isNotEmpty()) {
+            // SEARCH BAR ESTILITZADA
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                SearchBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    query = viewModel.searchedText,
+                    onQueryChange = { viewModel.onSearchTextChange(it) },
+                    onSearch = { viewModel.onSearch(it) },
+                    active = viewModel.active,
+                    onActiveChange = { viewModel.onActiveChange(it) },
+                    colors = SearchBarDefaults.colors(
+                        containerColor = Color(0xFF1E1E1E),
+                        inputFieldColors = TextFieldDefaults.colors(focusedTextColor = Color.White)
+                    ),
+                    placeholder = { Text("Search in library...", color = Color.Gray) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
+                    trailingIcon = {
+                        if (viewModel.active && viewModel.searchedText.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = Color.White,
+                                modifier = Modifier.clickable { viewModel.onSearchTextChange("") }
+                            )
+                        }
+                    }
+                ) {
+                    if (viewModel.searchedText.isEmpty() && viewModel.searchHistory.isNotEmpty()) {
+                        HistorySection(viewModel)
+                    }
                     DeckList(viewModel, navigateToDetail)
                 }
-                // CAS B: La barra està buida -> Ensenyem HISTORIAL
-                else {
-                    if (viewModel.searchHistory.isNotEmpty()) {
-                        Text(
-                            text = "Cerques recents",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(16.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Column(verticalArrangement = Arrangement.SpaceBetween)
-                        {
-                            LazyColumn {
-                                items(viewModel.searchHistory) { itemHistorial ->
-                                    ListItem(
-                                        headlineContent = { Text(itemHistorial) },
-                                        leadingContent = { Icon(Icons.Default.Refresh, contentDescription = null) },
-                                        modifier = Modifier.clickable {
-                                            viewModel.onSearchTextChange(itemHistorial)
-                                        }
-                                    )
-                                }
-
-                                // Botó per esborrar historial al final de la llista
-                                item {
-                                    TextButton(onClick = { viewModel.onClearHistory() }) {
-                                        Text("Erase history")
-                                    }
-                                }
-                            }
-                            DeckList(viewModel, navigateToDetail)
-                        }
-
-                    } else {
-                        DeckList(viewModel, navigateToDetail)
-                    }
-                }
             }
-            DeckList(viewModel, navigateToDetail)
+            if (!viewModel.active) {
+                Spacer(Modifier.height(16.dp))
+                DeckList(viewModel, navigateToDetail)
+            }
         }
     }
 }
 @Composable
-fun DeckList(viewModel: MemViewModel, navigateToDetail: (String) -> Unit){
+fun DeckList(viewModel: MemViewModel, navigateToDetail: (String) -> Unit) {
     val decksDB by viewModel.decksDB.collectAsStateWithLifecycle()
-    LazyColumn(modifier = Modifier
-        .fillMaxSize(1f)
-        .background(MaterialTheme.colorScheme.background)){
-        if (viewModel.searchedText.isNotEmpty())
-        {
-            items(viewModel.filteredNames, key = { deck -> deck.id }) { deck ->
-                DeckItem(deck,navigateToDetail)
-            }
-        }
-        else
-        {
-            items(items = decksDB, key = { deck -> deck.id }) { deck ->
-                DeckItem(deck, navigateToDetail)
-            }
+    val listToShow = if (viewModel.searchedText.isNotEmpty()) viewModel.filteredNames else decksDB
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(items = listToShow, key = { it.id }) { deck ->
+            DeckItem(deck, navigateToDetail, viewModel)
         }
     }
 }
 
 @Composable
-fun DeckItem(actualDeck: Deck, navigateToDetail: (String) -> Unit) {
-    Napier.d(tag = "MEMORY_LOG") { "Deck item func reached" }
-    Card(border = BorderStroke(Dp.Hairline, color = MaterialTheme.colorScheme.surface),
+fun DeckItem(actualDeck: Deck, navigateToDetail: (String) -> Unit, viewModel: MemViewModel) {
+    val scope = rememberCoroutineScope()
+    var isDownloading by rememberSaveable { mutableStateOf(false) }
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp, 5.dp)
-            .clickable{ navigateToDetail(actualDeck.id)},
-        shape = MaterialTheme.shapes.small
-    )    {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+            .height(90.dp)
+            .clickable(enabled = !isDownloading) {
+                scope.launch {
+                    isDownloading = true
+                    if (viewModel.selectAndDownloadDeck(actualDeck)) {
+                        navigateToDetail(actualDeck.id)
+                    }
+                    isDownloading = false
+                }
+            },
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Imatge del Deck amb un retall bonic
             AsyncImage(
                 model = actualDeck.imageUrl,
-                contentDescription = "Icon of ${actualDeck.name}",
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopCenter,
                 modifier = Modifier
-                    .size(64.dp))
-            Column {
-                Text(text = actualDeck.description,
-                    color = MaterialTheme.colorScheme.primary,
-                    softWrap = false,
+                    .size(90.dp)
+                    .clip(MaterialTheme.shapes.medium)
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = actualDeck.name,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = actualDeck.description,
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis
+                )
             }
+
+            // Icona d'informació lateral
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Details",
+                tint = Color(0xFFFFD700), // El nostre daurat corporatiu
+                modifier = Modifier.padding(end = 16.dp).size(20.dp)
+            )
         }
     }
 }

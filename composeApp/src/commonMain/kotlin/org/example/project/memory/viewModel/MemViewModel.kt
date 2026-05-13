@@ -1,20 +1,16 @@
 package org.example.project.memory.viewModel
 
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.example.project.memory.database.Card
@@ -22,6 +18,8 @@ import org.example.project.memory.database.Deck
 import org.example.project.memory.database.DecksRepository
 import org.example.project.memory.screens.CardItem
 import kotlin.collections.emptyList
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class MemViewModel: ViewModel() {
 
@@ -75,36 +73,13 @@ class MemViewModel: ViewModel() {
         Napier.d(tag ="MEMORY_LOG"){"[modifyCardList] defCardList size: ${defCardList.size}"}
     }
 
-    //GETTING AND SHUFFLING CARDS
-    /* val cardsList = remember(cardsDB) {
-        if (cardsDB.isNotEmpty()) {
-            val elementsNum: Int = if (cardsDB.size > 16) {
-                16
-            } else {
-                cardsDB.size
-            }
-            val limitedList = cardsDB.take(elementsNum)
-            val shuffledList = (limitedList + limitedList).shuffled()
-            shuffledList
-        } else {
-            emptyList()
-        }
-    }
-    Napier.d(tag = "MEMORY_LOG"){"[GameScr] size de cardsList: ${cardsList.size}"}
-    vm.
-    val finalCardList: MutableList<CardItem> = arrayListOf()
-
-    for ((i, cardItem) in cardsList.withIndex()) {
-        //Napier.d(tag = "MEMORY_LOG") { "[GameScr] id of each card before starting game, id: ${cardItem.id}" }
-        finalCardList.add(CardItem(i, cardItem, false))
-    }
-    vm.modifyCardList(finalCardList)*/
+    val maxCardValue: Int = 10
 
     fun CreateInGameDeck(){
         val cardsList: List<Card>
         if (_cards.value.isNotEmpty()) {
-            val elementsNum: Int = if (_cards.value.size > 16) {
-                16
+            val elementsNum: Int = if (_cards.value.size > maxCardValue) {
+                maxCardValue
             } else {
                 _cards.value.size
             }
@@ -225,26 +200,32 @@ class MemViewModel: ViewModel() {
 
     //-----------------TIMER---------------------------
 
-    var timer = 5000f // 50 SECONDS (this are the seconds you want * 100)
-        private set
-    private var timeLeftVm = 0f
     fun calculateTimePercentage(actualTime: Float): Float {
         return actualTime / timer
     }
+    val timer = 50 //seconds
     fun timerFlow() = flow {
-        var current = timer
-        var currentAux = current
-        while (current >= 0) {
-            emit(current)
-            delay(10) // wait 0.01 second
-            current--
-            if (isGameWon){
-                currentAux = current
-                current = 0f
-                emit(currentAux)
+        val timeSource = TimeSource.Monotonic
+        val duration = timer.seconds
+        val mark = timeSource.markNow()
+        val endMark = mark + duration
+
+        var isRunning = true
+
+        while (isRunning) {
+            val remaining = endMark - timeSource.markNow()
+            val remainingSeconds = remaining.toDouble(kotlin.time.DurationUnit.SECONDS).toFloat().coerceAtLeast(0f)
+
+            emit(remainingSeconds)
+
+            if (remainingSeconds <= 0f || isGameWon) {
+                isRunning = false
+            } else {
+                delay(16)
             }
         }
-        if (!isGameWon) isGameLost = true;
+
+        if (!isGameWon) isGameLost = true
     }
 
 
