@@ -32,14 +32,27 @@ kotlin {
     
     jvm()
     
-    js {
+    /*js {
         browser()
         binaries.executable()
-    }
-    
+    }*/
+    /*
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
+        binaries.executable()
+    }*/
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            commonWebpackConfig {
+                devServer = (devServer ?: org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer()).apply {
+                    static = (static ?: mutableListOf()).apply {
+                        add(project.projectDir.path + "/src/commonMain/composeResources")
+                    }
+                }
+            }
+        }
         binaries.executable()
     }
     
@@ -50,7 +63,7 @@ kotlin {
             implementation(libs.storage.kt)
             implementation(libs.ktor.client.android.vlatestversion)
             // Ktor (Motor de xarxa per Android)
-            implementation("io.ktor:ktor-client-android:3.4.2")
+            implementation("io.ktor:ktor-client-android:3.0.2")
 
         }
         val androidInstrumentedTest by getting {
@@ -62,7 +75,7 @@ kotlin {
         }
         iosMain.dependencies {
             // Motor de xarxa per a iOS necessari per Supabase
-            implementation("io.ktor:ktor-client-darwin:3.4.2")
+            implementation("io.ktor:ktor-client-darwin:3.0.2")
         }
 
         commonMain.dependencies {
@@ -84,10 +97,10 @@ kotlin {
             implementation("io.github.jan-tennert.supabase:storage-kt:3.0.2")
             implementation("io.github.jan-tennert.supabase:postgrest-kt:3.0.2")
             // Serialització JSON de Kotlin
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
             //Async img
-            implementation("io.coil-kt.coil3:coil-compose:3.4.0")
-            implementation("io.coil-kt.coil3:coil-network-ktor3:3.4.0")
+            implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.0.4")
             //Icons
             implementation(compose.components.uiToolingPreview)
             implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
@@ -156,4 +169,7 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+configurations.all {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-wasm")
 }

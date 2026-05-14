@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -29,7 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,18 +76,32 @@ fun GameScr(navigateBack: () -> Unit) {
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(items = vm.defCardList) {
-                            CardItem(item = it, vm)
+                    var gridCellsCount by rememberSaveable{mutableStateOf(4)}
+                    var pcSizeValue by rememberSaveable{mutableStateOf(1f)}
+                    BoxWithConstraints {
+                        if (maxWidth < 600.dp) {
+                            gridCellsCount = 2
+                            pcSizeValue = 1f
+                        } else if (maxWidth < 1000.dp){
+                            gridCellsCount = 4
+                            pcSizeValue = 0.5f
+                        }
+                        else{
+                            gridCellsCount = 10
+                            pcSizeValue = 0.3f
                         }
                     }
-                }
-
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(gridCellsCount),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth(pcSizeValue)
+                            ) {
+                                items(items = vm.defCardList) {
+                                    CardItem(item = it, vm)
+                                }
+                            }
+                        }
                 Spacer(Modifier.height(24.dp))
 
                 Button(
@@ -98,14 +116,16 @@ fun GameScr(navigateBack: () -> Unit) {
                     Text("Surrender", fontSize = 18.sp)
                 }
                 Spacer(Modifier.height(40.dp))
+                    }
+                }
             }
 
             if (vm.isGameWon || vm.isGameLost) {
                 EndGameOverlay(isWin = vm.isGameWon)
             }
         }
-    }
-}
+
+
 
 @Composable
 fun CardItem(item: CardItem, viewModel: MemViewModel) {
@@ -116,7 +136,7 @@ fun CardItem(item: CardItem, viewModel: MemViewModel) {
     )
 
     Card(
-        border = BorderStroke(2.dp, if (item.isFlipped) Color(0xFFFFD700) else Color(0xFF444444)), // Marc daurat si està girada
+        border = BorderStroke(2.dp, if (item.isFlipped) Color(0xFFFFD700) else Color(0xFF444444)),
         modifier = Modifier
             .aspectRatio(0.75f)
             .graphicsLayer {
@@ -159,7 +179,7 @@ fun CardItem(item: CardItem, viewModel: MemViewModel) {
 @Composable
 fun Timer(viewModel: MemViewModel) {
     val timeLeft by remember { viewModel.timerFlow() }.collectAsState(initial = viewModel.timer.toFloat())
-    val progress = viewModel.calculateTimePercentage(timeLeft.toFloat())
+    val progress = viewModel.calculateTimePercentage(timeLeft)
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(

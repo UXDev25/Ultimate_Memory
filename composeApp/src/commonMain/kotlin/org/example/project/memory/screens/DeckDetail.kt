@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -63,8 +64,19 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
         color = Color(0xFF121212)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            var gridCellsCount by rememberSaveable{mutableStateOf(4)}
+            BoxWithConstraints {
+                if (maxWidth < 600.dp) {
+                    gridCellsCount = 2
+                } else if (maxWidth < 1000.dp){
+                    gridCellsCount = 4
+                }
+                else{
+                    gridCellsCount = 10
+                }
+            }
             LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
+                columns = GridCells.Fixed(gridCellsCount),
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -88,7 +100,6 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
                         )
                     }
                 }
-
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                         Text(
@@ -125,12 +136,14 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
                     }
                 }
 
+
                 items(items = cards) { card ->
                     Box(modifier = Modifier.padding(horizontal = 8.dp)) {
                         CardItemDetail(item = card)
                     }
                 }
             }
+
 
             // BOTÓ TORNAR FLOTANT
             IconButton(
