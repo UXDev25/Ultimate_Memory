@@ -35,7 +35,7 @@ import ultimate_memory.composeapp.generated.resources.Res
 import ultimate_memory.composeapp.generated.resources.momazosdiego
 
 @Composable
-fun MainMenuScr(navigateTo1: () -> Unit, navigateTo2: () -> Unit, navigateTo3: () -> Unit) {
+fun MainMenuScr(navigateTo1: () -> Unit, navigateTo2: () -> Unit) {
     val vm: MemViewModel = viewModel { MemViewModel() }
 
     Surface(
@@ -108,13 +108,6 @@ fun MainMenuScr(navigateTo1: () -> Unit, navigateTo2: () -> Unit, navigateTo3: (
                     navigateTo1()
                 }
 
-                MenuButton(
-                    text = "SETTINGS",
-                    containerColor = Color(0xFF1E1E1E),
-                    contentColor = Color.White
-                ) {
-                    navigateTo3()
-                }
             }
         }
     }

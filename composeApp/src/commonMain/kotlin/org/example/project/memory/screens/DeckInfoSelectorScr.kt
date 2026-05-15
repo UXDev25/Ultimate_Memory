@@ -59,7 +59,6 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.launch
 import org.example.project.memory.database.Deck
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeckInfoSelectorScr(
@@ -170,9 +169,8 @@ fun DeckItem(actualDeck: Deck, navigateToDetail: (String) -> Unit, viewModel: Me
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Imatge del Deck amb un retall bonic
             AsyncImage(
-                model = actualDeck.imageUrl,
+                model = actualDeck.imageUrl?.toProxyUrl(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 alignment = Alignment.TopCenter,

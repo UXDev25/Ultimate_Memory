@@ -185,7 +185,7 @@ fun DeckGameItem(actualDeck: Deck, navigateToGame: () -> Unit, viewModel: MemVie
         ) {
             Box(modifier = Modifier.size(100.dp)) {
                 AsyncImage(
-                    model = actualDeck.imageUrl,
+                    model = actualDeck.imageUrl?.toProxyUrl(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

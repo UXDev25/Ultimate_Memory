@@ -120,6 +120,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.jlayer)
+            implementation("io.ktor:ktor-client-okhttp:3.0.2")
         }
     }
     sourceSets.androidInstrumentedTest.dependencies {

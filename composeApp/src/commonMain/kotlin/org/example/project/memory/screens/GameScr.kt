@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import io.github.aakira.napier.Napier
+import org.example.project.memory.audio.AudioPlayer
 import org.example.project.memory.viewModel.MemViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,25 +78,25 @@ fun GameScr(navigateBack: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     var gridCellsCount by rememberSaveable{mutableStateOf(4)}
-                    var pcSizeValue by rememberSaveable{mutableStateOf(1f)}
+                    var scSizeValue by rememberSaveable{mutableStateOf(1f)}
                     BoxWithConstraints {
                         if (maxWidth < 600.dp) {
-                            gridCellsCount = 2
-                            pcSizeValue = 1f
-                        } else if (maxWidth < 1000.dp){
                             gridCellsCount = 4
-                            pcSizeValue = 0.5f
+                            scSizeValue = 1f
+                        } else if (maxWidth < 1000.dp){
+                            gridCellsCount = 10
+                            scSizeValue = 0.7f
                         }
                         else{
-                            gridCellsCount = 10
-                            pcSizeValue = 0.3f
+                            gridCellsCount = 7
+                            scSizeValue = 0.7f
                         }
                     }
                             LazyVerticalGrid(
                                 columns = GridCells.Fixed(gridCellsCount),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth(pcSizeValue)
+                                modifier = Modifier.fillMaxWidth(scSizeValue)
                             ) {
                                 items(items = vm.defCardList) {
                                     CardItem(item = it, vm)
@@ -134,7 +135,7 @@ fun CardItem(item: CardItem, viewModel: MemViewModel) {
         animationSpec = tween(durationMillis = 500),
         label = "CardRotation"
     )
-
+    val audioPlayer = remember { AudioPlayer() }
     Card(
         border = BorderStroke(2.dp, if (item.isFlipped) Color(0xFFFFD700) else Color(0xFF444444)),
         modifier = Modifier
@@ -145,34 +146,42 @@ fun CardItem(item: CardItem, viewModel: MemViewModel) {
             }
             .clickable(
                 enabled = !item.isFlipped && !viewModel.isGameLost && viewModel.isClickable,
-                onClick = { viewModel.onCardClicked(item.id) }
+                onClick = {
+                    viewModel.onCardClicked(item.id)
+                    audioPlayer.playSound()
+                }
             ),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            if (rotation <= 90f) {
-                AsyncImage(
-                    model = viewModel.decksDB.value.find { it.id == item.card.deckId }?.imageUrl,
-                    contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.TopCenter,
-                    modifier = Modifier.fillMaxSize().padding(4.dp).clip(MaterialTheme.shapes.small)
-                )
-            } else {
-                AsyncImage(
-                    model = item.card.imageUrl,
-                    contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.TopCenter,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(4.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .graphicsLayer { rotationY = 180f }
-                )
-            }
+            AsyncImage(
+                model = viewModel.decksDB.value.find { it.id == item.card.deckId }?.imageUrl?.toProxyUrl(),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .graphicsLayer {
+                        alpha = if (rotation <= 90f) 1f else 0f
+                    }
+            )
+
+            AsyncImage(
+                model = item.card.imageUrl.toProxyUrl(),
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .graphicsLayer {
+                        rotationY = 180f
+                        alpha = if (rotation > 90f) 1f else 0f
+                    }
+            )
         }
     }
 }
@@ -214,6 +223,7 @@ fun EndGameOverlay(isWin: Boolean) {
             .background(Color.Black.copy(alpha = 0.7f)),
         contentAlignment = Alignment.Center
     ) {
+        val audioPlayer = remember { AudioPlayer() }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = if (isWin) "VICTORY!" else "GAME OVER",
@@ -226,6 +236,7 @@ fun EndGameOverlay(isWin: Boolean) {
                 color = Color.White,
                 fontSize = 18.sp
             )
+            if (isWin) audioPlayer.playVictory()
         }
     }
 }

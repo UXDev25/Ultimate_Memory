@@ -9,7 +9,13 @@ actual class AudioPlayer {
 
     actual fun playSound() {
         val context = AppContextHolder.context
-        mediaPlayer = MediaPlayer.create(context, R.raw.objectionfunk)
+        mediaPlayer = MediaPlayer.create(context, R.raw.flipcard)
+        mediaPlayer?.start()
+    }
+
+    actual fun playVictory() {
+        val context = AppContextHolder.context
+        mediaPlayer = MediaPlayer.create(context, R.raw.victory)
         mediaPlayer?.start()
     }
 }

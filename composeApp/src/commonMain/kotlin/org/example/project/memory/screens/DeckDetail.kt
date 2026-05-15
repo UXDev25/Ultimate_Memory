@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,11 +53,29 @@ import coil3.compose.AsyncImage
 import io.github.aakira.napier.Napier
 import org.example.project.memory.database.Card
 import org.example.project.memory.viewModel.MemViewModel
+import coil3.request.ImageRequest
+import coil3.compose.LocalPlatformContext
+import coil3.request.crossfade
 
+fun String.toProxyUrl(): String {
+    val supabaseProjectUrl = "https://bunsuieemrzjxdhunlrw.supabase.co"
+    val functionPath = "/functions/v1/proxy-image?url="
+
+    val encodedUrl = this
+        .replace(":", "%3A")
+        .replace("/", "%2F")
+        .replace("?", "%3F")
+        .replace("=", "%3D")
+        .replace("&", "%26")
+
+    return "$supabaseProjectUrl$functionPath$encodedUrl"
+}
 @Composable
 fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewModel) {
     val decksDB by viewModel.decksDB.collectAsStateWithLifecycle()
-    val actualDeck = decksDB.find { it.id == deckId }
+    val actualDeck = remember(decksDB, deckId) {
+        decksDB.find { it.id == deckId }
+    }
     val cards = viewModel.cardsDB.collectAsStateWithLifecycle().value
 
     Surface(
@@ -84,12 +103,17 @@ fun DeckDetailScr(deckId: String, navigateBack: () -> Unit, viewModel: MemViewMo
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
-                        AsyncImage(
-                            model = actualDeck?.imageUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                            val context = LocalPlatformContext.current
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(actualDeck?.imageUrl?.toProxyUrl())
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+
                         Box(
                             modifier = Modifier.fillMaxSize().background(
                                 Brush.verticalGradient(

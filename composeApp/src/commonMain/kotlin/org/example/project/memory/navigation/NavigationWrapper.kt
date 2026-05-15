@@ -9,7 +9,6 @@ import org.example.project.memory.screens.DeckGameSelectorScr
 import org.example.project.memory.screens.DeckInfoSelectorScr
 import org.example.project.memory.screens.GameScr
 import org.example.project.memory.screens.MainMenuScr
-import org.example.project.memory.screens.SettingsScr
 import org.example.project.memory.viewModel.MemViewModel
 
 @Composable
@@ -23,7 +22,6 @@ fun NavigationWrapper(viewModel: MemViewModel){
                 MainMenuScr(
                     navigateTo1 = { backStack.add(Route.DeckInfoSelectorRoute) },
                     navigateTo2 = { backStack.add(Route.DeckGameSelectorRoute) },
-                    navigateTo3 = { backStack.add(Route.SettingsRoute) },
                 )
             }
             entry<Route.DeckInfoSelectorRoute> {
@@ -55,11 +53,6 @@ fun NavigationWrapper(viewModel: MemViewModel){
                     } else {
                         backStack.removeLastOrNull()
                     } })
-            }
-            entry<Route.SettingsRoute> {
-                SettingsScr(
-                    navigateBack = { backStack.removeLastOrNull() }
-                )
             }
         }
     )

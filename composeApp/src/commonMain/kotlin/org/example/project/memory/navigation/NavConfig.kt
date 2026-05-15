@@ -13,7 +13,6 @@ val navConfig = SavedStateConfiguration {
             subclass(Route.DeckGameSelectorRoute::class, Route.DeckGameSelectorRoute.serializer())
             subclass(Route.DeckInfoSelectorRoute::class, Route.DeckInfoSelectorRoute.serializer())
             subclass(Route.DeckDetailRoute::class, Route.DeckDetailRoute.serializer())
-            subclass(Route.SettingsRoute::class, Route.SettingsRoute.serializer())
         }
     }
 }
